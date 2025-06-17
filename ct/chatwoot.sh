@@ -19,12 +19,6 @@ variables
 color
 catch_errors
 
-function description() {
-  msg_info "Running $APP installation script"
-  lxc-attach -n "$CTID" -- bash -c "curl -fsSL https://raw.githubusercontent.com/akuehlewind/ProxmoxVE/main/install/chatwoot-install.sh | bash"
-  msg_ok "$APP installation script completed"
-}
-
 start
 build_container
 description

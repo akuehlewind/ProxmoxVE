@@ -34,10 +34,6 @@ $STD apt-get install -y \
   ruby-full
 msg_ok "Installed PostgreSQL, Redis, Ruby"
 
-msg_info "Installing Bundler"
-gem install bundler --no-document
-msg_ok "Bundler installed"
-
 msg_info "Installing Node.js and Yarn"
 curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
 $STD apt-get install -y nodejs
@@ -45,16 +41,28 @@ $STD npm install -g yarn
 msg_ok "Installed Node.js and Yarn"
 
 msg_info "Creating chatwoot user with password"
-useradd -m chatwoot
+useradd -m -s /bin/bash chatwoot
 echo "chatwoot:chatwoot" | chpasswd
 msg_ok "Created user and set default password"
+
+msg_info "Installing rbenv and Ruby 3.4.4 for chatwoot user"
+su - chatwoot -c "git clone https://github.com/rbenv/rbenv.git ~/.rbenv"
+su - chatwoot -c "git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build"
+su - chatwoot -c "echo 'export PATH=\"\$HOME/.rbenv/bin:\$PATH\"' >> ~/.bashrc"
+su - chatwoot -c "echo 'eval \"\$(rbenv init -)\"' >> ~/.bashrc"
+su - chatwoot -c "bash -c 'source ~/.bashrc && rbenv install 3.4.4 && rbenv global 3.4.4'"
+msg_ok "Installed Ruby 3.4.4"
+
+msg_info "Installing bundler inside rbenv environment"
+su - chatwoot -c "bash -c 'source ~/.bashrc && gem install bundler'"
+msg_ok "Bundler installed"
 
 msg_info "Cloning Chatwoot repo"
 su - chatwoot -c "git clone https://github.com/chatwoot/chatwoot.git"
 msg_ok "Cloned Chatwoot repo"
 
 msg_info "Running Chatwoot setup (this may take a while)"
-su - chatwoot -c "cd chatwoot && ./bin/setup"
+su - chatwoot -c "bash -c 'cd chatwoot && source ~/.bashrc && bundle install && yarn install && bundle exec rake db:setup'"
 msg_ok "Chatwoot setup completed"
 
 msg_info "Creating Chatwoot systemd service"

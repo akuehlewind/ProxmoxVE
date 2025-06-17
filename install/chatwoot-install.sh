@@ -34,18 +34,28 @@ useradd -m -s /bin/bash chatwoot
 echo "chatwoot:chatwoot" | chpasswd
 msg_ok "Created user and set default password"
 
-msg_info "Installing rbenv and Ruby 3.4.4"
+msg_info "Installing rbenv and Ruby 3.2.2"
 su - chatwoot -c "git clone https://github.com/rbenv/rbenv.git ~/.rbenv"
 su - chatwoot -c "git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build"
-su - chatwoot -c "echo 'export PATH=\"\$HOME/.rbenv/bin:\$PATH\"' >> ~/.bashrc"
-su - chatwoot -c "echo 'eval \"\$(rbenv init -)\"' >> ~/.bashrc"
-su - chatwoot -c "bash -lc 'rbenv install 3.4.4 && rbenv global 3.4.4'"
-su - chatwoot -c "bash -lc 'gem install bundler --no-document'"
-msg_ok "Installed Ruby 3.4.4 with rbenv and bundler"
+su - chatwoot -c "export PATH=\$HOME/.rbenv/bin:\$PATH && eval \$(~/.rbenv/bin/rbenv init -) && rbenv install 3.2.2 && rbenv global 3.2.2"
+su - chatwoot -c "export PATH=\$HOME/.rbenv/bin:\$PATH && eval \$(~/.rbenv/bin/rbenv init -) && gem install bundler --no-document"
+msg_ok "Installed Ruby 3.2.2 with rbenv and bundler"
 
 msg_info "Cloning Chatwoot"
 su - chatwoot -c "git clone https://github.com/chatwoot/chatwoot.git"
 msg_ok "Cloned Chatwoot"
+
+msg_info "Setting up Chatwoot environment"
+su - chatwoot -c "cd ~/chatwoot && cp .env.example .env"
+su - chatwoot -c "cd ~/chatwoot && sed -i 's/RAILS_ENV=development/RAILS_ENV=production/' .env"
+su - chatwoot -c "cd ~/chatwoot && sed -i 's/SECRET_KEY_BASE=.*/SECRET_KEY_BASE=$(openssl rand -hex 64)/' .env"
+msg_ok "Environment setup completed"
+
+msg_info "Configuring database"
+su - chatwoot -c "cd ~/chatwoot && cp config/database.yml.example config/database.yml"
+su - chatwoot -c "cd ~/chatwoot && sed -i 's/username:.*/username: chatwoot/' config/database.yml"
+su - chatwoot -c "cd ~/chatwoot && sed -i 's/password:.*/password: chatwoot/' config/database.yml"
+msg_ok "Database configuration completed"
 
 msg_info "Running Chatwoot setup (may take a while)"
 su - chatwoot -c "bash -lc 'cd ~/chatwoot && bundle install && yarn install && bundle exec rake db:setup'"

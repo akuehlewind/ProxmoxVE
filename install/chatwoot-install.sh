@@ -48,21 +48,15 @@ msg_ok "Created user and set default password"
 msg_info "Installing rbenv and Ruby 3.4.4 for chatwoot user"
 su - chatwoot -c "git clone https://github.com/rbenv/rbenv.git ~/.rbenv"
 su - chatwoot -c "git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build"
-su - chatwoot -c "echo 'export PATH=\"\$HOME/.rbenv/bin:\$PATH\"' >> ~/.bashrc"
-su - chatwoot -c "echo 'eval \"\$(rbenv init -)\"' >> ~/.bashrc"
-su - chatwoot -c "bash -c 'source ~/.bashrc && rbenv install 3.4.4 && rbenv global 3.4.4'"
-msg_ok "Installed Ruby 3.4.4"
-
-msg_info "Installing bundler inside rbenv environment"
-su - chatwoot -c "bash -c 'source ~/.bashrc && gem install bundler'"
-msg_ok "Bundler installed"
+su - chatwoot -c "bash -lc 'rbenv install 3.4.4 && rbenv global 3.4.4 && gem install bundler'"
+msg_ok "Installed Ruby 3.4.4 and Bundler"
 
 msg_info "Cloning Chatwoot repo"
 su - chatwoot -c "git clone https://github.com/chatwoot/chatwoot.git"
 msg_ok "Cloned Chatwoot repo"
 
 msg_info "Running Chatwoot setup (this may take a while)"
-su - chatwoot -c "bash -c 'cd chatwoot && source ~/.bashrc && bundle install && yarn install && bundle exec rake db:setup'"
+su - chatwoot -c "bash -lc 'cd ~/chatwoot && bundle install && yarn install && bundle exec rake db:setup'"
 msg_ok "Chatwoot setup completed"
 
 msg_info "Creating Chatwoot systemd service"
@@ -75,12 +69,14 @@ After=network.target
 Type=simple
 User=chatwoot
 WorkingDirectory=/home/chatwoot/chatwoot
-ExecStart=/usr/bin/foreman start
+ExecStart=/home/chatwoot/.rbenv/shims/foreman start
 Restart=always
+Environment=RAILS_ENV=production
 
 [Install]
 WantedBy=multi-user.target
 EOF
+
 systemctl daemon-reexec
 systemctl daemon-reload
 systemctl enable --now chatwoot

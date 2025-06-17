@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-# Copyright (c) 2021-2025 community-scripts ORG
+# Chatwoot Proxmox LXC Installer
 # Author: Adrian Kühlewind (akuehlewind)
-# License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
-# Source: https://www.chatwoot.com/
+# License: MIT
+# Based on official Chatwoot installer: https://get.chatwoot.app/linux/install.sh
 
 source /dev/stdin <<<"$FUNCTIONS_FILE_PATH"
 color
@@ -23,16 +23,23 @@ $STD apt-get install -y --no-install-recommends \
   libvips \
   libvips-dev \
   imagemagick \
-  libimage-exiftool-perl
-msg_ok "Installed base dependencies"
-
-msg_info "Installing PostgreSQL, Redis and Ruby"
-$STD apt-get install -y \
+  libimage-exiftool-perl \
   postgresql \
   postgresql-contrib \
   redis-server \
-  ruby-full
-msg_ok "Installed PostgreSQL, Redis, Ruby"
+  ruby-full \
+  libyaml-dev \
+  libffi-dev \
+  zlib1g-dev \
+  libgdbm-dev \
+  libncurses5-dev \
+  libtool \
+  bison \
+  autoconf \
+  pkg-config \
+  libreadline-dev \
+  libssl-dev
+msg_ok "Installed base dependencies"
 
 msg_info "Installing Node.js and Yarn"
 curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
@@ -48,16 +55,27 @@ msg_ok "Created user and set default password"
 msg_info "Installing rbenv and Ruby 3.4.4 for chatwoot user"
 su - chatwoot -c "git clone https://github.com/rbenv/rbenv.git ~/.rbenv"
 su - chatwoot -c "git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build"
-su - chatwoot -c "bash -lc 'rbenv install 3.4.4 && rbenv global 3.4.4 && gem install bundler'"
-msg_ok "Installed Ruby 3.4.4 and Bundler"
+su - chatwoot -c "echo 'export PATH=\"$HOME/.rbenv/bin:$PATH\"' >> ~/.bashrc"
+su - chatwoot -c "echo 'eval \"\$(rbenv init -)\"' >> ~/.bashrc"
+su - chatwoot -c "bash -lc 'rbenv install 3.4.4 && rbenv global 3.4.4'"
+msg_ok "Installed Ruby 3.4.4"
+
+msg_info "Installing bundler in rbenv environment"
+su - chatwoot -c "bash -lc 'gem install bundler'"
+msg_ok "Bundler installed"
 
 msg_info "Cloning Chatwoot repo"
-su - chatwoot -c "git clone https://github.com/chatwoot/chatwoot.git"
+su - chatwoot -c "git clone https://github.com/chatwoot/chatwoot.git ~/chatwoot"
 msg_ok "Cloned Chatwoot repo"
 
-msg_info "Running Chatwoot setup (this may take a while)"
-su - chatwoot -c "bash -lc 'cd ~/chatwoot && bundle install && yarn install && bundle exec rake db:setup'"
-msg_ok "Chatwoot setup completed"
+msg_info "Installing Chatwoot dependencies (this may take a while)"
+su - chatwoot -c "bash -lc 'cd ~/chatwoot && bundle install && yarn install'"
+msg_ok "Dependencies installed"
+
+msg_info "Setting up Chatwoot database"
+su - postgres -c "psql -c \"CREATE USER chatwoot CREATEDB;\""
+su - chatwoot -c "bash -lc 'cd ~/chatwoot && cp config/database.yml.postgresql config/database.yml && bundle exec rake db:setup'"
+msg_ok "Database setup completed"
 
 msg_info "Creating Chatwoot systemd service"
 cat <<EOF >/etc/systemd/system/chatwoot.service
@@ -69,14 +87,12 @@ After=network.target
 Type=simple
 User=chatwoot
 WorkingDirectory=/home/chatwoot/chatwoot
-ExecStart=/home/chatwoot/.rbenv/shims/foreman start
+ExecStart=/usr/bin/foreman start
 Restart=always
-Environment=RAILS_ENV=production
 
 [Install]
 WantedBy=multi-user.target
 EOF
-
 systemctl daemon-reexec
 systemctl daemon-reload
 systemctl enable --now chatwoot
@@ -88,4 +104,4 @@ customize
 msg_info "Cleaning up"
 $STD apt-get -y autoremove
 $STD apt-get -y autoclean
-msg_ok "Cleaned"
+msg_ok "Cleaned up system"

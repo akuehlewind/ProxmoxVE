@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-REPO="https://raw.githubusercontent.com/akuehlewind/ProxmoxVE/main"
 source <(curl -s https://raw.githubusercontent.com/akuehlewind/ProxmoxVE/main/misc/build.func)
 # Copyright (c) 2021-2025 community-scripts ORG
 # Author: Adrian Kühlewind (akuehlewind)

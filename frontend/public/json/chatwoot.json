@@ -1,0 +1,44 @@
+{
+    "name": "Chatwoot",
+    "slug": "chatwoot",
+    "categories": [
+        2
+    ],
+    "date_created": "2025-06-17",
+    "type": "ct",
+    "updateable": false,
+    "privileged": false,
+    "interface_port": 3000,
+    "documentation": "https://www.chatwoot.com/docs/product/overview",
+    "website": "https://www.chatwoot.com/",
+    "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons/webp/chatwoot.webp",
+    "config_path": "",
+    "description": "Chatwoot is an open-source customer engagement suite, an alternative to Intercom, Zendesk, and Drift. It lets you manage conversations across multiple channels like website live chat, email, WhatsApp, Facebook, and more — all from a single inbox.",
+    "install_methods": [
+        {
+            "type": "default",
+            "script": "ct/chatwoot.sh",
+            "resources": {
+                "cpu": 2,
+                "ram": 2048,
+                "hdd": 8,
+                "os": "ubuntu",
+                "version": "24.04"
+            }
+        }
+    ],
+    "default_credentials": {
+        "username": null,
+        "password": null
+    },
+    "notes": [
+        {
+            "text": "Chatwoot requires 2GB+ RAM and PostgreSQL/Redis services, which are included and configured during the install script.",
+            "type": "info"
+        },
+        {
+            "text": "The initial setup might take a few minutes while dependencies and the application are being installed.",
+            "type": "info"
+        }
+    ]
+}

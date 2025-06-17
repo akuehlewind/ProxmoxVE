@@ -34,15 +34,20 @@ useradd -m -s /bin/bash chatwoot
 echo "chatwoot:chatwoot" | chpasswd
 msg_ok "Created user and set default password"
 
-msg_info "Installing rbenv and Ruby 3.2.2"
+msg_info "Installing required Ruby build packages"
+$STD apt-get install -y libssl-dev libreadline-dev zlib1g-dev \
+  libyaml-dev libffi-dev libgdbm-dev libncurses5-dev \
+  libdb-dev uuid-dev autoconf bison
+msg_ok "Installed Ruby build dependencies"
+
+msg_info "Installing rbenv and Ruby 3.4.4"
 su - chatwoot -c "git clone https://github.com/rbenv/rbenv.git ~/.rbenv"
 su - chatwoot -c "git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build"
 su - chatwoot -c "echo 'export PATH=\"\$HOME/.rbenv/bin:\$PATH\"' >> ~/.bashrc"
 su - chatwoot -c "echo 'eval \"\$(rbenv init -)\"' >> ~/.bashrc"
-su - chatwoot -c "source ~/.bashrc && rbenv install 3.2.2"
-su - chatwoot -c "source ~/.bashrc && rbenv global 3.2.2"
-su - chatwoot -c "source ~/.bashrc && gem install bundler --no-document"
-msg_ok "Installed Ruby 3.2.2 with rbenv and bundler"
+su - chatwoot -c "bash -lc 'rbenv install 3.4.4 && rbenv global 3.4.4'"
+su - chatwoot -c "bash -lc 'gem install bundler --no-document'"
+msg_ok "Installed Ruby 3.4.4 with rbenv and bundler"
 
 msg_info "Cloning Chatwoot"
 su - chatwoot -c "git clone https://github.com/chatwoot/chatwoot.git"
@@ -55,7 +60,7 @@ su - chatwoot -c "cd ~/chatwoot && sed -i 's/SECRET_KEY_BASE=.*/SECRET_KEY_BASE=
 msg_ok "Environment setup completed"
 
 msg_info "Configuring database"
-su - chatwoot -c "cd ~/chatwoot && cp config/database.yml.example config/database.yml"
+su - chatwoot -c "cd ~/chatwoot && cp config/database.yml.example config/database.yml || true"
 su - chatwoot -c "cd ~/chatwoot && sed -i 's/username:.*/username: chatwoot/' config/database.yml"
 su - chatwoot -c "cd ~/chatwoot && sed -i 's/password:.*/password: chatwoot/' config/database.yml"
 msg_ok "Database configuration completed"

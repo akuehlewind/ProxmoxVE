@@ -34,16 +34,24 @@ $STD apt-get install -y \
   ruby-full
 msg_ok "Installed PostgreSQL, Redis, Ruby"
 
+msg_info "Installing Bundler"
+gem install bundler --no-document
+msg_ok "Bundler installed"
+
 msg_info "Installing Node.js and Yarn"
 curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
 $STD apt-get install -y nodejs
 $STD npm install -g yarn
 msg_ok "Installed Node.js and Yarn"
 
-msg_info "Creating chatwoot user"
+msg_info "Creating chatwoot user with password"
 useradd -m chatwoot
+echo "chatwoot:chatwoot" | chpasswd
+msg_ok "Created user and set default password"
+
+msg_info "Cloning Chatwoot repo"
 su - chatwoot -c "git clone https://github.com/chatwoot/chatwoot.git"
-msg_ok "Created user and cloned Chatwoot repo"
+msg_ok "Cloned Chatwoot repo"
 
 msg_info "Running Chatwoot setup (this may take a while)"
 su - chatwoot -c "cd chatwoot && ./bin/setup"
